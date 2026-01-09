@@ -171,7 +171,7 @@ def run_checker(message):
 ⏳ <b>Time:</b> {execution_time:.1f}s
 ━━━━━━━━━━━━━━
 👤 <b>Dev: @Rusisvirus</b>'''
-                    bot.send_message(message.chat.id, msg)
+                    bot.reply_to(message, msg)
                 
                 # 2. CCN LIVE
                 elif 'security code' in last:
@@ -188,7 +188,7 @@ def run_checker(message):
 ⏳ <b>Time:</b> {execution_time:.1f}s
 ━━━━━━━━━━━━━━
 👤 <b>Dev: @Rusisvirus</b>'''
-                    bot.send_message(message.chat.id, msg)
+                    bot.reply_to(message, msg)
                     
                 # 3. LOW FUNDS
                 elif 'funds' in last:
@@ -207,7 +207,7 @@ def run_checker(message):
 ⏳ <b>Time:</b> {execution_time:.1f}s
 ━━━━━━━━━━━━━━
 👤 <b>Dev: @Rusisvirus</b>'''
-                    bot.send_message(message.chat.id, msg)
+                    bot.reply_to(message, msg)
 
                 # 4. 3D SECURE
                 elif '3Ds' in last or 'authenticate' in last:
@@ -224,7 +224,7 @@ def run_checker(message):
 ⏳ <b>Time:</b> {execution_time:.1f}s
 ━━━━━━━━━━━━━━
 👤 <b>Dev: @Rusisvirus</b>'''
-                    bot.send_message(message.chat.id, msg)
+                    bot.reply_to(message, msg)
                 
                 else:
                     dd += 1
