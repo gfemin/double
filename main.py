@@ -14,22 +14,25 @@ bot = telebot.TeleBot(token, parse_mode="HTML")
 ALLOWED_IDS = ['1915369904', '7103090839']
 
 # ==========================================
-# 🔥 DOUBLE CHECK FUNCTION
+# 🔥 DOUBLE CHECK FUNCTION (UPDATED WITH 3DS)
 # ==========================================
 def check_double_gate(cc):
     # -------------------------------------
-    # 1️⃣ Gate 1 Check (Original Response)
+    # 1️⃣ Gate 1 Check
     # -------------------------------------
     try:
         last = str(func_timeout(100, Gate1, args=(cc,)))
     except:
         last = 'Error'
 
+    # 🔥 Check for Approved OR 3Ds in Gate 1
     if "Payment Successful!" in last or "funds" in last or "security code" in last:
         return f"{last} (Gate 1 ✅)"
+    elif "authenticate" in last or "3d_secure" in last:
+        return f"{last} (Gate 1 - 3Ds 🔐)"
     
     # -------------------------------------
-    # 2️⃣ Gate 2 Check (Original Response)
+    # 2️⃣ Gate 2 Check
     # -------------------------------------
     else:
         try:
@@ -40,17 +43,17 @@ def check_double_gate(cc):
 
         if "Donation Successful!" in last2 or "funds" in last2 or "security code" in last2:
             return f"{last2} (Gate 2 ✅)"
+        elif "authenticate" in last2 or "3d_secure" in last2:
+            return f"{last2} (Gate 2 - 3Ds 🔐)"
         else:
             return "Decline⛔"
 
 # ==========================================
-# 🎨 DASHBOARD UI (PROGRESS)
+# 🎨 DASHBOARD UI
 # ==========================================
 def get_dashboard_ui(total, current, live, die, ccn, low, cvv, threeds, last_cc, last_response):
     percent = int((current / total) * 100) if total > 0 else 0
     display_cc = last_cc if len(last_cc) >= 10 else "Wait..."
-    
-    # Dashboard မှာတော့ အတိုကောက်ပဲ ပြမယ်
     display_response = (last_response[:30] + "...") if len(last_response) > 30 else last_response
     
     line = "━━━━━━━━━━━━━━━━━━"
@@ -87,7 +90,7 @@ def main(message):
     t.start()
 
 # ==========================================
-# 🚀 CHECKER LOGIC (DARK WEB UI UPDATE)
+# 🚀 CHECKER LOGIC (WITH 3DS HANDLING)
 # ==========================================
 def run_checker(message):
     dd = 0; live = 0; ch = 0; ccn = 0; cvv = 0; lowfund = 0; threeds = 0
@@ -117,26 +120,21 @@ def run_checker(message):
                 card_type = data.get('type','Unknown')
                 country = data.get('country_name','Unknown')
                 country_flag = data.get('country_flag', '')
-                bank = data.get('bank','Unknown')
+                bank = data.get('bank','Unknown') 
 
                 start_time = time.time()
-                
-                # 🔥 CALL DOUBLE CHECK
                 last = check_double_gate(cc)
-                
                 execution_time = time.time() - start_time
                 
-                # Update Dashboard UI periodically
-                if "Successful" in last or "funds" in last or "security code" in last or (index%8==0):
+                # Update Dashboard UI
+                if "Successful" in last or "funds" in last or "security code" in last or "3Ds" in last or (index%8==0):
                     view_text, markup = get_dashboard_ui(total, index, ch, dd, ccn, lowfund, cvv, threeds, cc, last)
                     try: bot.edit_message_text(chat_id=chat_id, message_id=ko, text=view_text, reply_markup=markup)
                     except: pass
                 
                 print(f"{cc} -> {last}")
 
-                # ---------------------------------------------
-                # 🔥 DETERMINE GATEWAY NAME 🔥
-                # ---------------------------------------------
+                # Determine Gate Name
                 if "Gate 1" in last:
                     gate_display = "Stripe 0.5$"
                 elif "Gate 2" in last:
@@ -145,10 +143,10 @@ def run_checker(message):
                     gate_display = "Auth / Charge"
 
                 # ---------------------------------------------
-                # 🟢 RESULT MESSAGES (DARK STYLE)
+                # 🟢 RESULT MESSAGES
                 # ---------------------------------------------
                 
-                # 1. APPROVED / CHARGED (Hit)
+                # 1. APPROVED / CHARGED
                 if 'Successful' in last:
                     ch += 1
                     with open("lives.txt", "a") as f: f.write(f"{cc} - {last}\n")
@@ -159,12 +157,13 @@ def run_checker(message):
 🩸 <b>Response:</b> APPROVED! 🔥
 ━━━━━━━━━━━━━━
 🕸 <b>Type:</b> {brand} - {card_type}
+🏛 <b>Bank:</b> {bank}
 🗺 <b>Region:</b> {country} {country_flag}
 🔪 <b>Gate:</b> {gate_display}
 ⏳ <b>Time:</b> {execution_time:.1f}s
 ━━━━━━━━━━━━━━
 👤 <b>Dev: @Rusisvirus</b>'''
-                    bot.reply_to(message, msg)
+                    bot.send_message(message.chat.id, msg)
                 
                 # 2. CCN LIVE
                 elif 'security code' in last:
@@ -175,12 +174,13 @@ def run_checker(message):
 🩸 <b>Response:</b> CCN LIVE ✅
 ━━━━━━━━━━━━━━
 🕸 <b>Type:</b> {brand} - {card_type}
+🏛 <b>Bank:</b> {bank}
 🗺 <b>Region:</b> {country} {country_flag}
 🔪 <b>Gate:</b> {gate_display}
 ⏳ <b>Time:</b> {execution_time:.1f}s
 ━━━━━━━━━━━━━━
 👤 <b>Dev: @Rusisvirus</b>'''
-                    bot.reply_to(message, msg)
+                    bot.send_message(message.chat.id, msg)
                     
                 # 3. LOW FUNDS
                 elif 'funds' in last:
@@ -191,12 +191,30 @@ def run_checker(message):
 🩸 <b>Response:</b> LOW FUNDS 💰
 ━━━━━━━━━━━━━━
 🕸 <b>Type:</b> {brand} - {card_type}
+🏛 <b>Bank:</b> {bank}
 🗺 <b>Region:</b> {country} {country_flag}
 🔪 <b>Gate:</b> {gate_display}
 ⏳ <b>Time:</b> {execution_time:.1f}s
 ━━━━━━━━━━━━━━
 👤 <b>Dev: @Rusisvirus</b>'''
-                    bot.reply_to(message, msg)
+                    bot.send_message(message.chat.id, msg)
+
+                # 4. 3D SECURE (NEW 🔥)
+                elif '3Ds' in last or 'authenticate' in last:
+                    threeds += 1
+                    msg = f'''🔐 <b>3D SECURE REQUIRED</b> 🔐
+━━━━━━━━━━━━━━
+🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+🩸 <b>Response:</b> 3Ds / OTP REQUESTED 📱
+━━━━━━━━━━━━━━
+🕸 <b>Type:</b> {brand} - {card_type}
+🏛 <b>Bank:</b> {bank}
+🗺 <b>Region:</b> {country} {country_flag}
+🔪 <b>Gate:</b> {gate_display}
+⏳ <b>Time:</b> {execution_time:.1f}s
+━━━━━━━━━━━━━━
+👤 <b>Dev: @Rusisvirus</b>'''
+                    bot.send_message(message.chat.id, msg)
                 
                 else:
                     dd += 1
