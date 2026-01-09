@@ -11,7 +11,7 @@ from func_timeout import func_timeout, FunctionTimedOut
 token = '7957655626:AAEUuz6g8x5tY4k3yZz1EFp_tWL2Ov5Zt44'
 bot = telebot.TeleBot(token, parse_mode="HTML")
 
-ALLOWED_IDS = ['1915369904', '7103090839']
+ALLOWED_IDS = ['1915369904', '6815134572']
 
 # ==========================================
 # 🔥 DOUBLE CHECK FUNCTION
@@ -102,13 +102,18 @@ def main(message):
     t.start()
 
 # ==========================================
-# 🚀 CHECKER LOGIC
+# 🚀 CHECKER LOGIC (FIXED STOP ISSUE)
 # ==========================================
 def run_checker(message):
     dd = 0; live = 0; ch = 0; ccn = 0; cvv = 0; lowfund = 0; threeds = 0
     chat_id = message.chat.id
     file_name = f"combo_{chat_id}_{int(time.time())}.txt"
     stop_file = f"stop_{chat_id}.stop"
+
+    # 🔥 FIX: အလုပ်စတာနဲ့ Stop ဖိုင်အဟောင်းရှိရင် အရင်ဖျက်မယ်
+    if os.path.exists(stop_file):
+        try: os.remove(stop_file)
+        except: pass
 
     try:
         ko = bot.reply_to(message, "𝐒𝐭𝐚𝐫𝐭𝐢𝐧𝐠 𝐃𝐮𝐚𝐥 𝐂𝐡𝐞𝐜𝐤𝐞𝐫! 🚀").message_id
@@ -229,7 +234,9 @@ def run_checker(message):
                 else:
                     dd += 1
         
+        # Cleanup
         if os.path.exists(file_name): os.remove(file_name)
+        if os.path.exists(stop_file): os.remove(stop_file) # ပြီးသွားရင်လည်း stop file ကိုဖျက်မယ်
         bot.edit_message_text(chat_id=chat_id, message_id=ko, text='✅ <b>Dual Checking Completed!</b>')
 
     except Exception as e: print(e)
