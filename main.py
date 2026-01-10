@@ -26,7 +26,7 @@ def check_double_gate(cc):
         last = 'Error'
 
     # 🔥 Check for Approved OR 3Ds in Gate 1
-    if "Payment Successful!" in last or "funds" in last or "security code" in last:
+    if "Donation Successful!" in last or "funds" in last or "security code" in last:
         return f"{last} (Gate 1 ✅)"
     elif "authenticate" in last or "3d_secure" in last:
         return f"{last} (Gate 1 - 3Ds 🔐)"
